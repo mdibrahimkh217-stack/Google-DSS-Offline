@@ -1,1 +1,66 @@
+name: Build and Package Linux Deb
 
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build .deb Package
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Node Dependencies
+        run: npm ci || npm install
+
+      - name: Build Web Production Assets
+        run: npm run build
+
+      - name: Compile and Package Debian .deb
+        run: |
+          chmod +x build-deb.sh
+          ./build-deb.sh
+
+      - name: Verify .deb File Was Created
+        run: |
+          ls -lh gsuite-offline_1.0.0_amd64.deb
+
+      - name: Upload .deb as GitHub Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: gsuite-offline_1.0.0_amd64
+          path: gsuite-offline_1.0.0_amd64.deb
+          retention-days: 30
+
+      - name: Create GitHub Release with .deb Download
+        if: startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/main'
+        uses: softprops/action-gh-release@v2
+        continue-on-error: true
+        with:
+          tag_name: v1.0.0
+          name: Google Workspace Offline Suite v1.0.0 (.deb)
+          body: |
+            ### Google Workspace Offline Suite for Linux Mint / Ubuntu / Debian
+            - **Package**: `gsuite-offline_1.0.0_amd64.deb`
+            - **RAM Footprint**: Under 60MB (Native WebKitGTK & GTK3)
+            - **Features**: Docs, Sheets, Slides in unified window, AES-256 encryption, bilingual spellcheck, native mouse clipboard, and desktop UI scaling.
+          files: gsuite-offline_1.0.0_amd64.deb

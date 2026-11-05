@@ -5,10 +5,6 @@ on:
     branches:
       - main
       - master
-  pull_request:
-    branches:
-      - main
-      - master
   workflow_dispatch:
 
 jobs:
@@ -36,8 +32,59 @@ jobs:
 
       - name: Compile and Package Debian .deb
         run: |
-          chmod +x build-deb.sh
-          ./build-deb.sh
+          PKG="gsuite-offline_1.0.0_amd64"
+          rm -rf "$PKG"
+          mkdir -p "$PKG/DEBIAN" "$PKG/usr/bin" "$PKG/usr/share/applications" "$PKG/opt/gsuite-offline"
+          cp -r dist/* "$PKG/opt/gsuite-offline/"
+
+          cat << 'EOF' > "$PKG/DEBIAN/control"
+          Package: gsuite-offline
+          Version: 1.0.0
+          Section: office
+          Priority: optional
+          Architecture: amd64
+          Depends: libwebkit2gtk-4.1-0 | libwebkit2gtk-4.0-37, libgtk-3-0, libc6
+          Maintainer: Offline Suite Project <md.ibrahim.kh217@gmail.com>
+          Description: Ultra-lightweight native Linux Google Docs, Sheets, and Slides suite
+           Runs natively using system WebKitGTK and GTK3 libraries with under 60MB RAM.
+          EOF
+
+          cat << 'EOF' > "$PKG/usr/share/applications/gsuite-offline.desktop"
+          [Desktop Entry]
+          Name=Google Workspace Offline Suite
+          Comment=Ultra-fast offline Docs, Sheets and Slides
+          Exec=gsuite-offline %U
+          Icon=gsuite-offline
+          Terminal=false
+          Type=Application
+          Categories=Office;WordProcessor;Spreadsheet;Presentation;
+          EOF
+
+          cat << 'EOF' > "$PKG/usr/bin/gsuite-offline"
+          #!/usr/bin/env python3
+          import sys, os
+          try:
+              import gi
+              gi.require_version('Gtk', '3.0')
+              try:
+                  gi.require_version('WebKit2', '4.1')
+              except:
+                  gi.require_version('WebKit2', '4.0')
+              from gi.repository import Gtk, WebKit2
+              win = Gtk.Window(title='Google Workspace Offline Suite')
+              win.set_default_size(1280, 800)
+              view = WebKit2.WebView()
+              view.load_uri('file:///opt/gsuite-offline/index.html')
+              win.add(view)
+              win.connect('destroy', Gtk.main_quit)
+              win.show_all()
+              Gtk.main()
+          except:
+              os.system('x-www-browser --app="file:///opt/gsuite-offline/index.html" || xdg-open "file:///opt/gsuite-offline/index.html"')
+          EOF
+          chmod +x "$PKG/usr/bin/gsuite-offline"
+
+          dpkg-deb --build --root-owner-group "$PKG"
 
       - name: Verify .deb File Was Created
         run: |
@@ -49,17 +96,3 @@ jobs:
           name: gsuite-offline_1.0.0_amd64
           path: gsuite-offline_1.0.0_amd64.deb
           retention-days: 30
-
-      - name: Create GitHub Release with .deb Download
-        if: startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/main'
-        uses: softprops/action-gh-release@v2
-        continue-on-error: true
-        with:
-          tag_name: v1.0.0
-          name: Google Workspace Offline Suite v1.0.0 (.deb)
-          body: |
-            ### Google Workspace Offline Suite for Linux Mint / Ubuntu / Debian
-            - **Package**: `gsuite-offline_1.0.0_amd64.deb`
-            - **RAM Footprint**: Under 60MB (Native WebKitGTK & GTK3)
-            - **Features**: Docs, Sheets, Slides in unified window, AES-256 encryption, bilingual spellcheck, native mouse clipboard, and desktop UI scaling.
-          files: gsuite-offline_1.0.0_amd64.deb

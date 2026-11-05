@@ -1,0 +1,6 @@
+{
+  "name": "Google Workspace Offline Suite",
+  "description": "Ultra-lightweight, native Linux offline office suite for Docs, Sheets, and Slides with client-side AES-256 encryption, bilingual spellcheck, and desktop UI scaling.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

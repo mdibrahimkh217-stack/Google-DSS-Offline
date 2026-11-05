@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=Google Workspace Offline Suite
+GenericName=Office Suite
+Comment=Ultra-fast offline Docs, Sheets and Slides
+Exec=gsuite-offline %U
+Icon=gsuite-offline
+Terminal=false
+Type=Application
+Categories=Office;WordProcessor;Spreadsheet;Presentation;
+MimeType=application/x-gsuite;application/vnd.openxmlformats-officedocument.wordprocessingml.document;application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;application/vnd.openxmlformats-officedocument.presentationml.presentation;
+StartupWMClass=gsuite-offline

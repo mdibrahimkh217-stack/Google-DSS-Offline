@@ -1,0 +1,11 @@
+Package: gsuite-offline
+Version: 1.0.0
+Section: office
+Priority: optional
+Architecture: amd64
+Depends: libwebkit2gtk-4.1-0 | libwebkit2gtk-4.0-37, libgtk-3-0, libc6
+Maintainer: Offline Suite Project <md.ibrahim.kh217@gmail.com>
+Description: Ultra-lightweight native Linux Google Docs, Sheets, and Slides suite
+ A standalone, privacy-first office suite combining Google Docs, Sheets,
+ and Slides into a single native window without bundled Chromium or browser overhead.
+ Runs natively using system WebKitGTK and GTK3 libraries with under 60MB RAM usage.

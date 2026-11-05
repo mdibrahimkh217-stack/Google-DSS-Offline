@@ -62,7 +62,28 @@ jobs:
 
           cat << 'EOF' > "$PKG/usr/bin/gsuite-offline"
           #!/usr/bin/env python3
-          import sys, os
+          import sys, os, time, socket, threading
+          from http.server import HTTPServer, SimpleHTTPRequestHandler
+
+          # Pick a free loopback port
+          sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+          sock.bind(('127.0.0.1', 0))
+          port = sock.getsockname()[1]
+          sock.close()
+
+          # Start ultra-lightweight local offline HTTP server in background thread
+          os.chdir('/opt/gsuite-offline')
+          class QuietHandler(SimpleHTTPRequestHandler):
+              def log_message(self, format, *args):
+                  pass
+
+          httpd = HTTPServer(('127.0.0.1', port), QuietHandler)
+          t = threading.Thread(target=httpd.serve_forever, daemon=True)
+          t.start()
+          time.sleep(0.05)
+
+          url = f'http://127.0.0.1:{port}/index.html'
+
           try:
               import gi
               gi.require_version('Gtk', '3.0')
@@ -73,14 +94,18 @@ jobs:
               from gi.repository import Gtk, WebKit2
               win = Gtk.Window(title='Google Workspace Offline Suite')
               win.set_default_size(1280, 800)
+              win.set_position(Gtk.WindowPosition.CENTER)
               view = WebKit2.WebView()
-              view.load_uri('file:///opt/gsuite-offline/index.html')
+              settings = view.get_settings()
+              settings.set_enable_javascript(True)
+              settings.set_enable_offline_web_application_cache(True)
+              view.load_uri(url)
               win.add(view)
               win.connect('destroy', Gtk.main_quit)
               win.show_all()
               Gtk.main()
-          except:
-              os.system('x-www-browser --app="file:///opt/gsuite-offline/index.html" || xdg-open "file:///opt/gsuite-offline/index.html"')
+          except Exception:
+              os.system(f'x-www-browser --app="{url}" || sensible-browser "{url}" || xdg-open "{url}"')
           EOF
           chmod +x "$PKG/usr/bin/gsuite-offline"
 

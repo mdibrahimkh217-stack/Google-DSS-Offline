@@ -100,21 +100,32 @@ sudo apt-get install -f`;
             </pre>
           </div>
 
-          <div className="pt-2 flex items-center justify-between">
-            <button
-              onClick={downloadDebianPackageScript}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-semibold text-xs transition shadow-sm"
+          <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-2.5">
+            <a
+              href="/gsuite-offline_1.0.0_amd64.deb"
+              download="gsuite-offline_1.0.0_amd64.deb"
+              className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition shadow-md"
             >
               <Download className="w-4 h-4" />
-              <span>build-deb.sh স্ক্রিপ্ট ডাউনলোড করুন</span>
-            </button>
+              <span>সরাসরি .deb ফাইল ডাউনলোড করুন (832 KB)</span>
+            </a>
 
-            <button
-              onClick={onClose}
-              className="px-4 py-2 rounded-xl text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition"
-            >
-              বন্ধ করুন
-            </button>
+            <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+              <button
+                onClick={downloadDebianPackageScript}
+                className="px-3 py-2 rounded-xl border border-neutral-300 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-200 text-xs transition"
+                title="build-deb.sh স্ক্রিপ্ট ডাউনলোড করুন"
+              >
+                <span>বিল্ড স্ক্রিপ্ট</span>
+              </button>
+
+              <button
+                onClick={onClose}
+                className="px-4 py-2 rounded-xl text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition text-xs"
+              >
+                বন্ধ
+              </button>
+            </div>
           </div>
         </div>
       </div>

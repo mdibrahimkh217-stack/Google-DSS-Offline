@@ -1,0 +1,57 @@
+#!/usr/bin/env python3
+import sys, os, time, socket, threading
+from http.server import HTTPServer, SimpleHTTPRequestHandler
+
+# Pick a free loopback port
+sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+sock.bind(('127.0.0.1', 0))
+port = sock.getsockname()[1]
+sock.close()
+
+# Start ultra-lightweight local offline HTTP server in background thread
+os.chdir('/opt/gsuite-offline')
+class QuietHandler(SimpleHTTPRequestHandler):
+    def log_message(self, format, *args):
+        pass
+
+httpd = HTTPServer(('127.0.0.1', port), QuietHandler)
+t = threading.Thread(target=httpd.serve_forever, daemon=True)
+t.start()
+time.sleep(0.05)
+
+url = f'http://127.0.0.1:{port}/index.html'
+
+# Check if native WebKitGTK is available
+try:
+    import gi
+    gi.require_version('Gtk', '3.0')
+    try:
+        gi.require_version('WebKit2', '4.1')
+    except (ValueError, AttributeError):
+        gi.require_version('WebKit2', '4.0')
+    from gi.repository import Gtk, WebKit2
+
+    class GSuiteApp(Gtk.Application):
+        def __init__(self):
+            super().__init__(application_id='com.google.workspace.offline')
+
+        def do_activate(self):
+            win = Gtk.ApplicationWindow(application=self, title='Google Workspace Offline Suite')
+            win.set_default_size(1280, 800)
+            win.set_position(Gtk.WindowPosition.CENTER)
+
+            view = WebKit2.WebView()
+            settings = view.get_settings()
+            settings.set_enable_javascript(True)
+            settings.set_enable_offline_web_application_cache(True)
+            view.load_uri(url)
+
+            win.add(view)
+            win.show_all()
+
+    app = GSuiteApp()
+    sys.exit(app.run(sys.argv))
+
+except Exception as err:
+    # Lightweight fallback: Launch local browser in standalone app mode
+    os.system(f'x-www-browser --app="{url}" || sensible-browser "{url}" || xdg-open "{url}"')
